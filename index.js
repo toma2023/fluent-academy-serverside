@@ -46,7 +46,13 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
         const instructorsCollections = client.db("academyDB").collection("instructors");
+
         const usersCollections = client.db("academyDB").collection("users");
+        const classCollections = client.db("academyDB").collection("class");
+
+
+
+
         //jwt
         app.post('/jwt', (req, res) => {
             const user = req.body;
@@ -64,15 +70,15 @@ async function run() {
             next();
         }
 
-        // const verifyInstructor = async (req, res, next) => {
-        //     const email = req.decoded.email;
-        //     const query = { email: email }
-        //     const user = await usersCollections.findOne(query);
-        //     if (user?.role !== 'instructor') {
-        //         return res.status(403).send({ error: true, message: 'forbidden message' });
-        //     }
-        //     next();
-        // }
+        const verifyInstructor = async (req, res, next) => {
+            const email = req.decoded.email;
+            const query = { email: email }
+            const user = await usersCollections.findOne(query);
+            if (user?.role !== 'instructor') {
+                return res.status(403).send({ error: true, message: 'forbidden message' });
+            }
+            next();
+        }
 
         //user related apis
         //create user
@@ -89,7 +95,7 @@ async function run() {
             res.send(result);
         })
         //get user
-        app.get('/users', verifyJWT,verifyAdmin, async (req, res) => {
+        app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
             const result = await usersCollections.find().toArray();
             res.send(result);
         })
@@ -151,6 +157,37 @@ async function run() {
             const result = await instructorsCollections.find().toArray();
             res.send(result);
         })
+
+        //verifyJWT, verifyAdmin,
+        app.post('/addClass', verifyJWT, verifyInstructor, async (req, res) => {
+            const newItem = req.body;
+            const result = await classCollections.insertOne(newItem)
+            res.send(result);
+        })
+
+        app.get('/addClass', async (req, res) => {
+            const result = await classCollections.find().toArray();
+            res.send(result);
+        })
+
+        //manage status
+        app.patch('/addClass/:id', async (req, res) => {
+            const id = req.params.id;
+            const {status} = req.body;
+            console.log(id)
+            const filter = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set: {
+                    status: status
+                },
+            };
+            const result = await classCollections.updateOne(filter, updateDoc);
+            res.send(result);
+        })
+
+
+
+
 
 
 
