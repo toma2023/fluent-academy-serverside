@@ -191,8 +191,17 @@ async function run() {
             const result = await selectCollections.insertOne(item);
             res.send(result);
         })
-
-
+       
+        app.get('/selects', verifyJWT, async (req, res) => {
+            const email = req.query.email;
+            if (!email) {
+                res.send([]);
+            }
+            
+            const query = { email: email };
+            const result = await selectCollections.find(query).toArray();
+            res.send(result);
+        })
 
 
 
