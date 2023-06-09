@@ -49,7 +49,7 @@ async function run() {
 
         const usersCollections = client.db("academyDB").collection("users");
         const classCollections = client.db("academyDB").collection("class");
-
+        const selectCollections = client.db("academyDB").collection("selects");
 
 
 
@@ -173,7 +173,7 @@ async function run() {
         //manage status
         app.patch('/addClass/:id', async (req, res) => {
             const id = req.params.id;
-            const {status} = req.body;
+            const { status } = req.body;
             console.log(id)
             const filter = { _id: new ObjectId(id) }
             const updateDoc = {
@@ -185,7 +185,12 @@ async function run() {
             res.send(result);
         })
 
-
+        //selected courses
+        app.post('/selects', async (req, res) => {
+            const item = req.body;
+            const result = await selectCollections.insertOne(item);
+            res.send(result);
+        })
 
 
 
