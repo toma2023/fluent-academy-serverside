@@ -3,6 +3,7 @@ const app = express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config()
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
 const port = process.env.PORT || 5000;
 
 // middleware
@@ -50,6 +51,7 @@ async function run() {
         const usersCollections = client.db("academyDB").collection("users");
         const classCollections = client.db("academyDB").collection("class");
         const selectCollections = client.db("academyDB").collection("selects");
+        const paymentCollections = client.db("academyDB").collection("payments");
 
 
 
@@ -192,7 +194,7 @@ async function run() {
             res.send(result);
         })
         //update cart count(useSelected courses)
-        app.get('/selects', verifyJWT, async (req, res) => {
+        app.get('/selects', async (req, res) => {
             const email = req.query.email;
             if (!email) {
                 res.send([]);
@@ -209,6 +211,32 @@ async function run() {
             const result = await selectCollections.deleteOne(query);
             res.send(result);
         })
+
+        //create payment intent
+        app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+            const { price } = req.body;
+            const amount = parseInt(price * 100);
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card']
+            });
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            })
+
+        })
+
+        //payment related apis
+        app.post('/payments', verifyJWT, async (req, res) => {
+            const payment = req.body;
+            const insertResult = await paymentCollections.insertOne(payment);
+            const query = { _id: { $in: payment.addItems.map(id => new ObjectId(id)) } }
+            const deleteResult = await selectCollections.deleteMany(query)
+
+            res.send({ insertResult, deleteResult });
+        })
+
 
 
 
