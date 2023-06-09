@@ -191,18 +191,24 @@ async function run() {
             const result = await selectCollections.insertOne(item);
             res.send(result);
         })
-       
+        //update cart count(useSelected courses)
         app.get('/selects', verifyJWT, async (req, res) => {
             const email = req.query.email;
             if (!email) {
                 res.send([]);
             }
-            
+
             const query = { email: email };
             const result = await selectCollections.find(query).toArray();
             res.send(result);
         })
-
+        //delete my selected class
+        app.delete('/selects/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await selectCollections.deleteOne(query);
+            res.send(result);
+        })
 
 
 
