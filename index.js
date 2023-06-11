@@ -97,7 +97,7 @@ async function run() {
             res.send(result);
         })
         //get user
-        app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
+        app.get('/users', async (req, res) => {
             const result = await usersCollections.find().toArray();
             res.send(result);
         })
@@ -195,20 +195,43 @@ async function run() {
         })
         //update cart count(useSelected courses)
         app.get('/selects', async (req, res) => {
-            const email = req.query.email;
-            if (!email) {
-                res.send([]);
-            }
+            // const email = req.query.email;
+            // if (!email) {
+            //     res.send([]);
+            // }
 
-            const query = { email: email };
+            // const query = { email: email };
+            const result = await selectCollections.find().toArray();
+            res.send(result);
+        })
+    
+        app.get('/selects/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email }
             const result = await selectCollections.find(query).toArray();
             res.send(result);
         })
+
+
         //delete my selected class
         app.delete('/selects/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await selectCollections.deleteOne(query);
+            res.send(result);
+        })
+        //single id my selected class
+        app.get('/selects/:singleId', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await selectCollections.findOne(query);
+            res.send(result);
+        })
+       
+
+        //my classes for instructor
+        app.get('/addClass', async (req, res) => {
+            const result = await classCollections.find().toArray();
             res.send(result);
         })
 
@@ -230,12 +253,72 @@ async function run() {
         //payment related apis
         app.post('/payments', verifyJWT, async (req, res) => {
             const payment = req.body;
-            const insertResult = await paymentCollections.insertOne(payment);
+
             const query = { _id: { $in: payment.addItems.map(id => new ObjectId(id)) } }
-            const deleteResult = await selectCollections.deleteMany(query)
+            const insertResult = await paymentCollections.insertOne(payment);
+            const deleteResult = await selectCollections.deleteOne(query)
 
             res.send({ insertResult, deleteResult });
         })
+
+        //get payments data for payment history page
+        app.get('/popularclass', async (req, res) => {
+            const result = await paymentCollections.find().toArray();
+            res.send(result);
+        })
+
+
+        //for my enrolled page
+        app.get('/payments/:email', async (req, res) => {
+            const paymentUser = req.params.email;
+            const query = { email: paymentUser };
+
+            try {
+                const result = await paymentCollections.find(query).toArray();
+                res.send(result);
+            } catch (error) {
+                console.error('Error retrieving payment data:', error);
+                res.status(500).send('An error occurred while retrieving payment data');
+            }
+        });
+
+        //update my class
+        app.put("/updateMyClass/:id", async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const updatedClass = req.body;
+            const Class = {
+                $set: {
+                    price: updatedClass.price,
+                    seats: updatedClass.seats,
+                    name: updatedClass.name,
+                    courseName: updatedClass.className,
+                }
+            }
+            const result = await classCollections.updateOne(filter, Class, options);
+            res.send(result);
+
+        })
+
+        //feedback
+        app.put('/addFeedback/:id', async (req, res) => {
+            const id = req.params.id;
+            const addFeedback = req.body.feedback;
+            // return console.log(feedback);
+            const query = { _id: new ObjectId(id) }
+            const options = { upsert: true }
+            const newFeedback = {
+                $set: {
+                    feedback: addFeedback,
+
+                }
+            }
+            const result = await classCollections.updateOne(query, newFeedback, options)
+            console.log("feedback", result)
+            res.send(result);
+        })
+
 
 
 
