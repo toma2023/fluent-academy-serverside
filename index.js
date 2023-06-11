@@ -153,13 +153,6 @@ async function run() {
         })
 
 
-
-        //instructors related apis
-        app.get('/instructors', async (req, res) => {
-            const result = await instructorsCollections.find().toArray();
-            res.send(result);
-        })
-
         //verifyJWT, verifyAdmin,
         app.post('/addClass', verifyJWT, verifyInstructor, async (req, res) => {
             const newItem = req.body;
