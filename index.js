@@ -267,7 +267,7 @@ async function run() {
             if (id) {
                 const filter = { _id: new ObjectId(id) }
                 const updateResult = await classCollections.findOne(filter)
-                // console.log("updateResult, id", updateResult, id)
+               
                 classCollections.updateOne(
                     { _id: updateResult?._id },
                     {
