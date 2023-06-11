@@ -204,7 +204,7 @@ async function run() {
             const result = await selectCollections.find().toArray();
             res.send(result);
         })
-    
+
         app.get('/selects/:email', async (req, res) => {
             const email = req.params.email;
             const query = { email: email }
@@ -227,7 +227,11 @@ async function run() {
             const result = await selectCollections.findOne(query);
             res.send(result);
         })
-       
+
+
+
+
+
 
         //my classes for instructor
         app.get('/addClass', async (req, res) => {
@@ -253,15 +257,58 @@ async function run() {
         //payment related apis
         app.post('/payments', verifyJWT, async (req, res) => {
             const payment = req.body;
-
+            // console.log(payment)
             const query = { _id: { $in: payment.addItems.map(id => new ObjectId(id)) } }
             const insertResult = await paymentCollections.insertOne(payment);
             const deleteResult = await selectCollections.deleteOne(query)
 
             res.send({ insertResult, deleteResult });
+            const id = payment?.selectedItems[0];
+            if (id) {
+                const filter = { _id: new ObjectId(id) }
+                const updateResult = await classCollections.findOne(filter)
+                // console.log("updateResult, id", updateResult, id)
+                classCollections.updateOne(
+                    { _id: updateResult?._id },
+                    {
+                        $inc: {
+                            enrollStudent: 1,
+                            seats: -1
+                        }
+                    }
+                )
+
+            }
+
         })
 
-        //get payments data for payment history page
+      
+
+        app.get("/topClass", async (req, res) => {
+            const { limit, sortBy } = req.query;
+            const query = { status: "approved" };
+          
+            let topClassData = classCollections.find(query);
+          
+            if (sortBy === "enrollStudent") {
+              topClassData = topClassData.sort({ enrollStudent: -1 });
+            }
+          
+            if (limit) {
+              topClassData = topClassData.limit(parseInt(limit));
+            }
+          
+            try {
+              const topClasses = await topClassData.toArray();
+              res.send(topClasses);
+            } catch (error) {
+              console.error("Error retrieving top classes:", error);
+              res.status(500).send("Error retrieving top classes");
+            }
+          });
+          
+
+        //get 
         app.get('/popularclass', async (req, res) => {
             const result = await paymentCollections.find().toArray();
             res.send(result);
