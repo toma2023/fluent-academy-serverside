@@ -54,7 +54,6 @@ async function run() {
         const paymentCollections = client.db("academyDB").collection("payments");
 
 
-
         //jwt
         app.post('/jwt', (req, res) => {
             const user = req.body;
@@ -271,7 +270,7 @@ async function run() {
         })
 
 
-        //top classes
+        //top classes section
         app.get("/topClass", async (req, res) => {
             const { limit, sortBy } = req.query;
             const query = { status: "approved" };
