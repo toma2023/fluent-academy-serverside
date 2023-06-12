@@ -221,11 +221,6 @@ async function run() {
             res.send(result);
         })
 
-
-
-
-
-
         //my classes for instructor
         app.get('/addClass', async (req, res) => {
             const result = await classCollections.find().toArray();
@@ -260,7 +255,7 @@ async function run() {
             if (id) {
                 const filter = { _id: new ObjectId(id) }
                 const updateResult = await classCollections.findOne(filter)
-               
+
                 classCollections.updateOne(
                     { _id: updateResult?._id },
                     {
@@ -275,31 +270,31 @@ async function run() {
 
         })
 
-      
 
+        //top classes
         app.get("/topClass", async (req, res) => {
             const { limit, sortBy } = req.query;
             const query = { status: "approved" };
-          
+
             let topClassData = classCollections.find(query);
-          
+
             if (sortBy === "enrollStudent") {
-              topClassData = topClassData.sort({ enrollStudent: -1 });
+                topClassData = topClassData.sort({ enrollStudent: -1 });
             }
-          
+
             if (limit) {
-              topClassData = topClassData.limit(parseInt(limit));
+                topClassData = topClassData.limit(parseInt(limit));
             }
-          
+
             try {
-              const topClasses = await topClassData.toArray();
-              res.send(topClasses);
+                const topClasses = await topClassData.toArray();
+                res.send(topClasses);
             } catch (error) {
-              console.error("Error retrieving top classes:", error);
-              res.status(500).send("Error retrieving top classes");
+                console.error("Error retrieving top classes:", error);
+                res.status(500).send("Error retrieving top classes");
             }
-          });
-          
+        });
+
 
         //get 
         app.get('/popularclass', async (req, res) => {
